@@ -97,11 +97,11 @@ plt.figure()
 plt.plot(range(1, loss_array_blocked_array.shape[1]+1), loss_array_blocked_array.mean(axis=0), label='RP')
 plt.plot(range(1, loss_array_random_array.shape[1]+1), loss_array_random_array.mean(axis=0), label='IP')
 # phase boundaries
-for v in [160, 320]:
+for v in [200, 400]:
     plt.axvline(x=v, linestyle='--', color='gray', alpha=0.6)
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
-plt.ylim(0.4, 2.2)
+plt.ylim(0.2, 2.4)
 plt.legend()
 plt.title('Average training loss per epoch')
 plt.savefig("images_replay/Average training loss per epoch.jpg", dpi=600, bbox_inches="tight")
@@ -109,7 +109,7 @@ plt.show()
 plt.close()
 
 # =================================================
-#    Learning Curves (During replay training)
+#    Learning Curves (During balanced replay training)
 # =================================================
 
 plt.figure()
@@ -123,7 +123,7 @@ plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.ylim(0.5, 2.0)
 plt.legend()
-plt.title('Average training loss per epoch (Replay Phase)')
+plt.title('Average training loss per epoch (Balanced Replay Phase)')
 
 plt.savefig("images_replay/Average training loss per epoch replay.jpg", dpi=600, bbox_inches="tight")
 plt.show()
@@ -171,7 +171,7 @@ plt.bar(x[0] + width, rp_replay_selected, width, color='#2ca02c', alpha=1.0, lab
 
 # ----- IP (2 bars) -----
 plt.bar(x[1] - width/2, ip_pre, width, color='#ff7f0e', alpha=0.4, label='IP Initial')
-plt.bar(x[1] + width/2, ip_replay, width, color='#ff7f0e', alpha=1.0, label='IP Replay')
+plt.bar(x[1] + width/2, ip_replay, width, color='#ff7f0e', alpha=1.0, label='IP Balanced Replay')
 
 plt.xticks(x, ['RP', 'IP'])
 plt.ylabel('Average Retention Loss')
@@ -210,7 +210,7 @@ plt.bar(x[0] + width, rp_replay_selected, width, color='#2ca02c', alpha=1.0, lab
 
 # ----- IP (2 bars) -----
 plt.bar(x[1] - width/2, ip_pre, width, color='#ff7f0e', alpha=0.4, label='IP Initial')
-plt.bar(x[1] + width/2, ip_replay, width, color='#ff7f0e', alpha=1.0, label='IP Replay')
+plt.bar(x[1] + width/2, ip_replay, width, color='#ff7f0e', alpha=1.0, label='IP Balanced Replay')
 
 plt.xticks(x, ['RP', 'IP'])
 plt.ylabel('Average Generalization Loss')
@@ -220,7 +220,8 @@ plt.ylim(0, 2.4)
 # fix legend
 handles, labels = plt.gca().get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
-plt.legend(by_label.values(), by_label.keys())
+plt.legend(by_label.values(), by_label.keys(), loc='upper left', bbox_to_anchor=(1.02, 1),
+    fontsize=9)
 
 plt.savefig("images_replay/bar_generalization_pre_vs_replay.jpg", dpi=600, bbox_inches="tight")
 plt.show()
@@ -270,7 +271,7 @@ sns.violinplot(
 ymin, ymax = df_all['Loss'].min(), df_all['Loss'].max()
 margin = 0.05 * (ymax - ymin)
 plt.ylim(ymin - margin, ymax + margin)
-plt.title('Retention Distribution: RP vs IP (no replay)', fontsize=16)
+plt.title('Retention Distribution: RP vs IP (before replay)', fontsize=16)
 plt.savefig("images_replay/violin_retention_initial_training.jpg", dpi=600, bbox_inches="tight")
 plt.show()
 plt.close()
@@ -290,7 +291,7 @@ df_rp_replay = pd.DataFrame({
         ['Seq-' + str(i+1)] * len(loss_retention_array_rp_replay_vec[i])
         for i in range(seq_num)
     ]),
-    'Condition': 'RP (Replay)'
+    'Condition': 'RP (Balanced Replay)'
 })
 
 # dataframe for IP
@@ -300,7 +301,7 @@ df_ip_replay = pd.DataFrame({
         ['Seq-' + str(i+1)] * len(loss_retention_array_ip_replay_vec[i])
         for i in range(seq_num)
     ]),
-    'Condition': 'IP (Replay)'
+    'Condition': 'IP (Balanced Replay)'
 })
 
 df_all_replay = pd.concat([df_rp_replay, df_ip_replay], ignore_index=True)
@@ -312,8 +313,8 @@ sns.violinplot(
     hue='Condition',
     data=df_all_replay,
     palette={
-        'RP (Replay)': '#1f77b4',
-        'IP (Replay)': '#ff7f0e'
+        'RP (Balanced Replay)': '#1f77b4',
+        'IP (Balanced Replay)': '#ff7f0e'
     },
 )
 ymin, ymax = df_all['Loss'].min(), df_all['Loss'].max()
@@ -354,12 +355,25 @@ df_rp_sel = pd.DataFrame({
 
 df_all = pd.concat([df_rp_bal, df_rp_sel], ignore_index=True)
 
-plt.figure(figsize=(10,5))
-sns.violinplot(x='Phase', y='Loss', hue='Condition', data=df_all, palette={'RP (Balanced Replay)': '#1f77b4', 'RP (Selected Replay)': '#2ca02c'})
+plt.figure(figsize=(12, 6))
+sns.violinplot(
+    x='Phase',
+    y='Loss',
+    hue='Condition',
+    data=df_all,
+    palette={'RP (Balanced Replay)': '#1f77b4',
+             'RP (Selected Replay)': '#2ca02c'},
+    width=0.6,
+    inner='box'
+)
 ymin, ymax = df_all['Loss'].min(), df_all['Loss'].max()
 margin = 0.05 * (ymax - ymin)
 plt.ylim(ymin - margin, ymax + margin)
-plt.title('RP Retention Distribution: Balanced vs Selected Replay', fontsize=16)
+plt.xlabel('Phase', fontsize=12)
+plt.ylabel('Loss', fontsize=12)
+plt.legend(title="Condition", bbox_to_anchor=(1.02, 1), loc='upper left')
+plt.title('RP Retention Distribution: Balanced vs Selected Replay', fontsize=15)
+plt.tight_layout()
 plt.savefig("images_replay/violin_rp_balanced_vs_selected.jpg", dpi=600, bbox_inches="tight")
 plt.show()
 plt.close()
@@ -433,13 +447,13 @@ df_train_ip = pd.DataFrame({
 # ---------- AFTER REPLAY ----------
 df_replay_rp = pd.DataFrame({
     'Loss': loss_test_array_rp_replay_balanced_array.flatten(),
-    'Phase': 'After Replay',
+    'Phase': 'After Balanced Replay',
     'Condition': 'RP'
 })
 
 df_replay_ip = pd.DataFrame({
     'Loss': loss_test_array_ip_replay_balanced_array.flatten(),
-    'Phase': 'After Replay',
+    'Phase': 'After Balanced Replay',
     'Condition': 'IP'
 })
 
@@ -477,28 +491,73 @@ def plot_four_curves(
     data_rp_after, data_ip_after,
     xlabel, ylabel, title
 ):
-    plt.figure()
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(8, 6))
 
     mean_rp_before = data_rp_before.mean(axis=0)
     mean_ip_before = data_ip_before.mean(axis=0)
-
-    mean_rp_after = data_rp_after.mean(axis=0)
-    mean_ip_after = data_ip_after.mean(axis=0)
+    mean_rp_after  = data_rp_after.mean(axis=0)
+    mean_ip_after  = data_ip_after.mean(axis=0)
 
     x = np.arange(mean_rp_before.shape[0])
 
-    plt.plot(x, mean_rp_before, label='RP (Before)', color='#1f77b4')
-    plt.plot(x, mean_ip_before, label='IP (Before)', color='#ff7f0e')
+    # CI shading
+    """
+    def compute_ci(data):
+        return 1.96 * data.std(axis=0) / np.sqrt(data.shape[0])
 
-    plt.plot(x, mean_rp_after, linestyle='--', label='RP (Replay)', color='#1f77b4')
-    plt.plot(x, mean_ip_after, linestyle='--', label='IP (Replay)', color='#ff7f0e')
+    ci_rp_before = compute_ci(data_rp_before)
+    ci_ip_before = compute_ci(data_ip_before)
+    ci_rp_after  = compute_ci(data_rp_after)
+    ci_ip_after  = compute_ci(data_ip_after)
+    """
+    # RP
+    plt.plot(x, mean_rp_before,
+             label='RP - Before',
+             color='#1f77b4',
+             linewidth=1.5,
+             alpha=0.6)
 
-    plt.xlabel(xlabel, fontsize=10)
-    plt.ylabel(ylabel, fontsize=10)
-    plt.legend(fontsize=11)
+    plt.plot(x, mean_rp_after,
+             label='RP - Balanced Replay',
+             color='#1f77b4',
+             linewidth=2.5)
+
+    # IP
+    plt.plot(x, mean_ip_before,
+             label='IP - Before',
+             color='#ff7f0e',
+             linewidth=1.5,
+             alpha=0.6)
+
+    plt.plot(x, mean_ip_after,
+             label='IP - Balanced Replay',
+             color='#ff7f0e',
+             linewidth=2.5)
+    
+    # CI shading
+    """
+    plt.fill_between(x, mean_rp_before - ci_rp_before, mean_rp_before + ci_rp_before,
+                     color='#1f77b4', alpha=0.2)
+    plt.fill_between(x, mean_ip_before - ci_ip_before, mean_ip_before + ci_ip_before,
+                     color='#ff7f0e', alpha=0.2)
+
+    plt.fill_between(x, mean_rp_after - ci_rp_after, mean_rp_after + ci_rp_after,
+                     color='#1f77b4', alpha=0.1)
+    plt.fill_between(x, mean_ip_after - ci_ip_after, mean_ip_after + ci_ip_after,
+                     color='#ff7f0e', alpha=0.1)
+    """
+
+    plt.xlabel(xlabel, fontsize=11)
+    plt.ylabel(ylabel, fontsize=11)
     plt.title(title, fontsize=12)
-
-    plt.savefig("images_replay/" + title.replace(" ", "_") + ".jpg", dpi=600)
+    plt.grid(alpha=0.3)
+    plt.legend(fontsize=9)
+    plt.tight_layout()
+    filename = title.replace(" ", "_").replace("(", "").replace(")", "")
+    plt.savefig(f"images_replay/{filename}.jpg", dpi=600, bbox_inches="tight")
     plt.show()
     plt.close()
 
@@ -509,7 +568,7 @@ plot_four_curves(
     loss_retention_noisy_array_rp_replay,
     loss_retention_noisy_array_ip_replay,
     'Repetition of noise injection', 'Loss',
-    'Noise Vulnerability - Trained Sequence (Before vs Replay)'
+    'Noise Vulnerability: Trained Sequence (Before vs Replay)'
 )
 
 plot_four_curves(
@@ -518,7 +577,7 @@ plot_four_curves(
     loss_test_noisy_array_rp_replay,
     loss_test_noisy_array_ip_replay,
     'Repetition of noise injection', 'Loss',
-    'Noise Vulnerability - Generalization (Before vs Replay)'
+    'Noise Vulnerability: Generalization (Before vs Replay)'
 )
 
 # Pruning tests
@@ -528,7 +587,7 @@ plot_four_curves(
     loss_retention_pruned_array_rp_replay,
     loss_retention_pruned_array_ip_replay,
     'Repetition of weight pruning', 'Loss',
-    'Pruning Vulnerability - Trained Sequence (Before vs Replay)'
+    'Pruning Vulnerability: Trained Sequence (Before vs Replay)'
 )
 
 plot_four_curves(
@@ -537,7 +596,7 @@ plot_four_curves(
     loss_test_pruned_array_rp_replay,
     loss_test_pruned_array_ip_replay,
     'Repetition of weight pruning', 'Loss',
-    'Pruning Vulnerability - Generalization (Before vs Replay)'
+    'Pruning Vulnerability: Generalization (Before vs Replay)'
 )
 
 # Interference tests
@@ -547,7 +606,7 @@ plot_four_curves(
     loss_retention_interf_array_rp_replay,
     loss_retention_interf_array_ip_replay,
     'Retraining Epoch', 'Loss',
-    'Interference Vulnerability - Trained Sequence (Before vs Replay)'
+    'Interference Vulnerability: Trained Sequence (Before vs Replay)'
 )
 
 plot_four_curves(
@@ -556,9 +615,8 @@ plot_four_curves(
     loss_test_interf_array_rp_replay,
     loss_test_interf_array_ip_replay,
     'Retraining Epoch', 'Loss',
-    'Interference Vulnerability - Generalization (Before vs Replay)'
+    'Interference Vulnerability: Generalization (Before vs Replay)'
 )
-
 
 # =================================================
 #    Vulnerability Test Results (3 RP conditions)
@@ -570,14 +628,14 @@ def plot_3_curves(rp_before, rp_balanced, rp_selected, title, xlabel, ylabel, sa
     mean_selected = rp_selected.mean(axis=0)
 
     plt.figure()
-    plt.plot(mean_before, label='RP (Before Replay)', linestyle='--')
-    plt.plot(mean_balanced, label='RP (Balanced Replay)', linewidth=2)
-    plt.plot(mean_selected, label='RP (Selected Replay)', linewidth=2)
+    plt.plot(mean_before, label='RP - Before', color='gray',alpha=0.5,linewidth=1.0)
+    plt.plot(mean_balanced, label='RP - Balanced Replay', linewidth=1.5)
+    plt.plot(mean_selected, label='RP - Selected Replay', linewidth=1.5)
 
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
-    plt.legend()
+    plt.legend(fontsize=9)
 
     plt.savefig(save_path, dpi=600, bbox_inches="tight")
     plt.show()
@@ -596,12 +654,95 @@ plot_3_curves(loss_retention_interf_array_blocked, loss_retention_interf_array_r
 # Interference generalization
 plot_3_curves(loss_test_interf_array_blocked, loss_test_interf_array_rp_replay, loss_test_interf_array_rp_replay_selected, 'RP Interference Vulnerability (Generalization)', 'Interference Steps', 'Generalization Loss', 'images_replay/interference_generalization_rp.jpg')
 
+# =================================================
+#    Delta Plot: Δ = loss_before - loss_after
+# =================================================
 
+# compyte Δ (mean over runs)
 
+# retention
+delta_retention_rp = loss_retention_blocked_array - loss_retention_rp_replay_balanced_array
+delta_retention_ip = loss_retention_random_array - loss_retention_ip_replay_balanced_array
 
+# generalization
+delta_generalization_rp = loss_test_blocked_array - loss_test_rp_replay_balanced_array
+delta_generalization_ip = loss_test_random_array - loss_test_ip_replay_balanced_array
 
+# training (average loss over epochs)
+delta_training_rp = loss_array_blocked_array.mean(axis=1) - loss_array_rp_replay_balanced_array.mean(axis=1)
+delta_training_ip = loss_array_random_array.mean(axis=1) - loss_array_ip_replay_balanced_array.mean(axis=1)
 
+# aggregate means + std
+labels = ['RP', 'IP']
 
+delta_means_retention = [delta_retention_rp.mean(), delta_retention_ip.mean()]
+delta_stds_retention  = [delta_retention_rp.std(),  delta_retention_ip.std()]
+
+delta_means_generalization = [delta_generalization_rp.mean(), delta_generalization_ip.mean()]
+delta_stds_generalization  = [delta_generalization_rp.std(),  delta_generalization_ip.std()]
+
+delta_means_training = [delta_training_rp.mean(), delta_training_ip.mean()]
+delta_stds_training  = [delta_training_rp.std(),  delta_training_ip.std()]
+
+# plot
+x = np.arange(len(labels))
+width = 0.25
+
+plt.figure(figsize=(10,8))
+
+plt.bar(x - width, delta_means_training, width, yerr=delta_stds_training, capsize=5, label='Training Δ')
+plt.bar(x,         delta_means_retention, width, yerr=delta_stds_retention, capsize=5, label='Retention Δ')
+plt.bar(x + width, delta_means_generalization, width, yerr=delta_stds_generalization, capsize=5, label='Generalization Δ')
+
+plt.xticks(x, labels)
+plt.ylabel('Δ Loss (Before - After Replay)')
+plt.title('Balanced Replay Improvement (Delta)')
+plt.axhline(0, linestyle='--')
+
+plt.legend()
+plt.tight_layout()
+plt.savefig("images_replay/delta_plot.jpg", dpi=600)
+plt.show()
+
+# =================================================
+#                Trade-Off Plot
+# =================================================
+
+# retention
+ret_rp = loss_retention_blocked_array.mean()
+ret_ip = loss_retention_random_array.mean()
+ret_rp_replay = loss_retention_rp_replay_balanced_array.mean()
+ret_ip_replay = loss_retention_ip_replay_balanced_array.mean()
+
+# generalization
+gen_rp = loss_test_blocked_array.mean()
+gen_ip = loss_test_random_array.mean()
+gen_rp_replay = loss_test_rp_replay_balanced_array.mean()
+gen_ip_replay = loss_test_ip_replay_balanced_array.mean()
+
+# plot
+plt.figure(figsize=(8,6))
+
+plt.scatter(ret_rp, gen_rp, s=120, label='RP')
+plt.scatter(ret_ip, gen_ip, s=120, label='IP')
+plt.scatter(ret_rp_replay, gen_rp_replay, s=120, label='RP + Replay')
+plt.scatter(ret_ip_replay, gen_ip_replay, s=120, label='IP + Replay')
+
+plt.text(ret_rp, gen_rp, ' RP')
+plt.text(ret_ip, gen_ip, ' IP')
+plt.text(ret_rp_replay, gen_rp_replay, ' RP+R')
+plt.text(ret_ip_replay, gen_ip_replay, ' IP+R')
+
+plt.xlabel('Retention Loss (Lower = Better Memory)')
+plt.ylabel('Generalization Loss (Lower = Better Transfer)')
+plt.title('Retention vs Generalization Trade-off')
+
+plt.grid(True)
+plt.legend()
+
+plt.tight_layout()
+plt.savefig("images_replay/tradeoff_retention_vs_generalization.jpg", dpi=600)
+plt.show()
 
 
 

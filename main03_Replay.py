@@ -35,7 +35,7 @@ def run_model(seed):
     print('Learning Rate:', lr)
     
     X_repetitive, y_repetitive, X_interleaved, y_interleaved = generate_synthetic_data(
-        num_training_sequences, samples_per_sequence=3200, add_input_noise=True)
+        num_training_sequences, samples_per_sequence=4000, add_input_noise=True)
     print(X_repetitive.shape)
     print(y_repetitive.shape)
 
@@ -100,12 +100,12 @@ def run_model(seed):
     # RP and IP will share the same Replay Dataset (randomly chosen, shuffled past sequences)
     # the replay algorithm modifies model1 and model2
     
-    # dataset size: 160*3 = 480, ~5% of the original training set
+    # dataset size: 200*3=600, ~5% of the original training set
     # =====================================================================================
 
     # generate replay dataset
     X_replay, y_replay = sample_balanced_replay(X_repetitive, y_repetitive,
-                                                num_per_seq=3200, k=160)
+                                                num_per_seq=4000, k=200) # 600 in total
     
     # copy the models for balanced Offline Replay
     model_RP_BalancedReplay = deepcopy(model1)
@@ -197,7 +197,7 @@ def run_model(seed):
 
     # generate selected replay dataset (biased toward A and B)
     X_replay_selected, y_replay_selected = sample_selected_replay(
-        X_repetitive, y_repetitive, num_per_seq=3200, k_A=240, k_B=200, k_C=40
+        X_repetitive, y_repetitive, num_per_seq=4000, k_A=300, k_B=250, k_C=50
     )
     
     # copy RP model 
