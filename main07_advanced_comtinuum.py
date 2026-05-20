@@ -1,7 +1,7 @@
 """
-Longer sequences → stronger temporal credit assignment demands: 12
+Longer sequences bring stronger temporal credit assignment demands: 12
 Forces the RNN to rely more on hidden state structure
-Amplifies interference effects (your core phenomenon)
+Amplifies interference effects
 
 Increase the number of base sequences (aka tasks learned): 6 
 Each sequence more actions to choose from: 6
